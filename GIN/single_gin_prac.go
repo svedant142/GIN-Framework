@@ -1,3 +1,4 @@
+// comment
 package main
 
 import (
