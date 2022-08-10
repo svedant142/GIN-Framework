@@ -59,7 +59,7 @@ func add(c *gin.Context) {
 
 	res.Sum = (req.A + req.B) * salary
 	//res.Sum = (req.A + req.B)
-
+	res.Status = true
 	c.JSON(200, res)
 
 }
