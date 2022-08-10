@@ -1,8 +1,11 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"net/http"
+
+	_ "github.com/go-sql-driver/mysql"
 
 	"github.com/gin-gonic/gin"
 )
@@ -12,8 +15,8 @@ type response struct {
 	Status bool `json:"stat"`
 }
 type request struct {
-	Ab int `form:"num1"`
-	Cd int `form:"num2"`
+	A int `form:"num1"`
+	B int `form:"num2"`
 }
 
 /*
@@ -23,28 +26,41 @@ type response struct{
 }*/
 func add(c *gin.Context) {
 
-	//a, err := strconv.Atoi(c.Query("num1"))
-	//b, err1 := strconv.Atoi(c.Query("num2"))
 	var res response
 	var req request
+	var salary int
 	err := c.BindQuery(&req)
-	fmt.Println(err)
-	//sum=a+b,status=true,}
-	res.Sum = req.Ab + req.Cd
-	res.Status = true
-	// //sum += b
-	// if err != nil || err1 != nil {
-	// 	res.Status = false
-	// 	c.JSON(404, gin.H{
-	// 		"error":  "occurred",
-	// 		"status": res.Status,
-	// 	})
-	// } else {
+	if err != nil {
+		fmt.Println(err)
+	}
+	db, err_db := sql.Open("mysql", "root:1234@123@tcp(127.0.0.1:3306)/dotDB")
+	if err_db != nil {
+		fmt.Println("error accessing database")
+		c.JSON(
+			http.StatusOK, gin.H{"message": "error for db"})
+
+	}
+	defer db.Close()
+	rows, err_row := db.Query("SELECT salary FROM dotDB.new_users WHERE id=?", 1)
+	if err_row != nil {
+		fmt.Println(err)
+		c.JSON(
+			http.StatusOK, gin.H{"salary": "error for rows"})
+	}
+	defer rows.Close()
+	rows.Next()
+	err_col := rows.Scan(&salary)
+	if err_col != nil {
+		fmt.Println("error while accessing row values")
+		c.JSON(http.StatusOK, gin.H{"salary": salary, "error message": err_col})
+
+	}
+
+	res.Sum = (req.A + req.B) * salary
+	//res.Sum = (req.A + req.B)
+
 	c.JSON(200, res)
-	// c.JSON(200, gin.H{
-	// 	"sum":    res.Sum,
-	// 	"status": res.Status,
-	// })
+
 }
 
 func main() {
